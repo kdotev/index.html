@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Calories">
+<meta name="theme-color" content="#0B0F1A">
+<title>Calorie Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;min-height:100dvh;background:linear-gradient(170deg,#0B0F1A 0%,#111827 50%,#0F172A 100%);font-family:'DM Sans',-apple-system,sans-serif;color:#E2E8F0;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+input::placeholder{color:#475569}
+input:focus{outline:none;border-color:#818CF8!important}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.app{max-width:440px;margin:0 auto;padding:max(env(safe-area-inset-top),20px) 16px 40px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.header h1{font-size:22px;font-weight:700;letter-spacing:-.02em}
+.header p{margin-top:4px;font-size:13px;color:#64748B;font-weight:500}
+.goal-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#94A3B8;font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;font-family:inherit}
+
+.ring-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:28px}
+.ring-container{position:relative;width:180px;height:180px}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-number{font-size:36px;font-weight:700;letter-spacing:-.03em;font-family:'JetBrains Mono',monospace;line-height:1}
+.ring-label{font-size:12px;color:#64748B;font-weight:500;margin-top:4px}
+
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;margin-top:20px}
+.cat-card{text-align:center;padding:10px 4px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05)}
+.cat-icon{font-size:16px}
+.cat-total{font-size:15px;font-weight:700;margin-top:4px;font-family:'JetBrains Mono',monospace;color:#F1F5F9}
+.cat-label-text{font-size:10px;color:#64748B;margin-top:2px;font-weight:500}
+
+.form-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:16px;margin-bottom:24px}
+.form-row{display:flex;gap:8px;margin-bottom:12px}
+.input-text{flex:1;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#F1F5F9;font-size:14px;font-weight:500;font-family:inherit}
+.input-cal{width:80px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#F1F5F9;font-size:14px;font-weight:600;text-align:center;font-family:'JetBrains Mono',monospace}
+.cat-btns{display:flex;gap:6px;margin-bottom:12px}
+.cat-btn{flex:1;padding:8px 0;border-radius:8px;background:transparent;border:1.5px solid rgba(255,255,255,.06);color:#64748B;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+.add-btn{width:100%;padding:11px 0;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit}
+.add-btn.ready{background:linear-gradient(135deg,#818CF8,#34D399);color:#0B0F1A}
+.add-btn.off{background:rgba(255,255,255,.04);color:#475569;cursor:default}
+
+.log-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.log-header h2{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.log-total{font-size:12px;color:#64748B;font-weight:500;font-family:'JetBrains Mono',monospace}
+.empty-msg{text-align:center;padding:36px 20px;color:#475569;font-size:14px;font-weight:500}
+
+.entry{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);margin-bottom:8px;animation:fadeSlide .35s both}
+.entry-icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:18px;flex-shrink:0}
+.entry-info{flex:1;min-width:0}
+.entry-name{font-size:14px;font-weight:600;color:#E2E8F0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry-meta{font-size:12px;color:#64748B;margin-top:2px}
+.entry-cal{font-size:16px;font-weight:700;color:#F1F5F9;font-variant-numeric:tabular-nums;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.entry-del{background:none;border:none;color:#475569;cursor:pointer;padding:6px 8px;font-size:18px;line-height:1;border-radius:6px}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:grid;place-items:center;z-index:50}
+.modal-box{background:#1E293B;border-radius:20px;padding:24px;width:300px;border:1px solid rgba(255,255,255,.08)}
+.modal-box h3{margin-bottom:16px;font-size:16px;font-weight:700}
+.modal-box input{width:100%;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#F1F5F9;font-size:18px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.modal-box button{margin-top:12px;width:100%;padding:10px 0;border-radius:10px;background:linear-gradient(135deg,#818CF8,#34D399);border:none;color:#0B0F1A;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+const CATS=[
+  {id:"breakfast",label:"Breakfast",icon:"\u2600\uFE0F",color:"#F59E0B"},
+  {id:"lunch",label:"Lunch",icon:"\uD83C\uDF24",color:"#10B981"},
+  {id:"dinner",label:"Dinner",icon:"\uD83C\uDF19",color:"#6366F1"},
+  {id:"snack",label:"Snack",icon:"\uD83C\uDF4E",color:"#EC4899"}
+];
+
+let entries=[],goal=2000,selCat="breakfast",modalOpen=false;
+const today=new Date().toISOString().slice(0,10);
+
+function load(){try{const d=JSON.parse(localStorage.getItem("cal-"+today));if(d){entries=d.entries||[];goal=d.goal||2000}}catch(e){}}
+function save(){localStorage.setItem("cal-"+today,JSON.stringify({entries,goal}))}
+function fmtTime(ts){return new Date(ts).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}
+
+function render(){
+  const total=entries.reduce((s,e)=>s+e.cal,0);
+  const rem=goal-total;
+  const pct=goal>0?(total/goal)*100:0;
+  const clamp=Math.min(pct,100);
+  const over=pct>100;
+  const r=83,circ=2*Math.PI*r,off=circ-(clamp/100)*circ;
+  const ds=new Date().toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"});
+  const catT=CATS.map(c=>({...c,t:entries.filter(e=>e.category===c.id).reduce((s,e)=>s+e.cal,0)}));
+
+  let h=`
+  <div class="header">
+    <div><h1>Calories</h1><p>${ds}</p></div>
+    <button class="goal-btn" onclick="openGoal()">Goal: ${goal.toLocaleString()}</button>
+  </div>
+  <div class="ring-wrap">
+    <div class="ring-container">
+      <svg width="180" height="180" style="transform:rotate(-90deg)">
+        <circle cx="90" cy="90" r="${r}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="14"/>
+        <circle cx="90" cy="90" r="${r}" fill="none" stroke="${over?"#EF4444":"url(#rg)"}" stroke-width="14"
+          stroke-dasharray="${circ}" stroke-dashoffset="${off}" stroke-linecap="round"
+          style="transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1)"/>
+        <defs><linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#818CF8"/><stop offset="100%" stop-color="#34D399"/>
+        </linearGradient></defs>
+      </svg>
+      <div class="ring-center">
+        <span class="ring-number" style="color:${rem<0?"#EF4444":"#F1F5F9"}">${Math.abs(rem).toLocaleString()}</span>
+        <span class="ring-label">${rem>=0?"remaining":"over budget"}</span>
+      </div>
+    </div>
+    <div class="cat-grid">
+      ${catT.map(c=>`<div class="cat-card"><div class="cat-icon">${c.icon}</div><div class="cat-total">${c.t}</div><div class="cat-label-text">${c.label}</div></div>`).join("")}
+    </div>
+  </div>
+  <div class="form-card">
+    <div class="form-row">
+      <input class="input-text" id="inp-name" type="text" placeholder="What did you eat?" onkeydown="if(event.key==='Enter')document.getElementById('inp-cal').focus()" oninput="updBtn()">
+      <input class="input-cal" id="inp-cal" type="number" inputmode="numeric" placeholder="kcal" onkeydown="if(event.key==='Enter')addEntry()" oninput="updBtn()">
+    </div>
+    <div class="cat-btns">
+      ${CATS.map(c=>{
+        const act=selCat===c.id;
+        return `<button class="cat-btn" style="${act?`background:${c.color}20;border-color:${c.color};color:${c.color}`:""}" onclick="selCat='${c.id}';render()">${c.icon} ${c.label}</button>`;
+      }).join("")}
+    </div>
+    <button class="add-btn off" id="add-btn" onclick="addEntry()">+ Add Entry</button>
+  </div>
+  <div class="log-header">
+    <h2>Today's Log</h2>
+    <span class="log-total">${total.toLocaleString()} kcal</span>
+  </div>`;
+
+  if(!entries.length){
+    h+=`<div class="empty-msg">No entries yet — add your first meal above.</div>`;
+  }else{
+    [...entries].reverse().forEach((e,i)=>{
+      const c=CATS.find(x=>x.id===e.category)||CATS[3];
+      h+=`<div class="entry" style="animation-delay:${i*.04}s">
+        <div class="entry-icon" style="background:${c.color}18">${c.icon}</div>
+        <div class="entry-info">
+          <div class="entry-name">${esc(e.name)}</div>
+          <div class="entry-meta">${c.label} &middot; ${fmtTime(e.ts)}</div>
+        </div>
+        <div class="entry-cal">${e.cal}</div>
+        <button class="entry-del" onclick="delEntry(${e.id})">&times;</button>
+      </div>`;
+    });
+  }
+
+  if(modalOpen){
+    h+=`<div class="modal-overlay" onclick="closeGoal()">
+      <div class="modal-box" onclick="event.stopPropagation()">
+        <h3>Daily Goal</h3>
+        <input id="goal-inp" type="number" inputmode="numeric" value="${goal}" onkeydown="if(event.key==='Enter')saveGoal()">
+        <button onclick="saveGoal()">Save</button>
+      </div>
+    </div>`;
+  }
+
+  document.getElementById("app").innerHTML=h;
+  if(modalOpen){document.getElementById("goal-inp")?.focus();document.getElementById("goal-inp")?.select()}
+}
+
+function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML}
+
+function updBtn(){
+  const n=document.getElementById("inp-name")?.value.trim();
+  const c=document.getElementById("inp-cal")?.value;
+  const b=document.getElementById("add-btn");
+  if(b)b.className="add-btn "+(n&&c?"ready":"off");
+}
+
+function addEntry(){
+  const ni=document.getElementById("inp-name");
+  const ci=document.getElementById("inp-cal");
+  const name=ni?.value.trim();
+  const cal=parseInt(ci?.value,10);
+  if(!name||isNaN(cal)||cal<=0)return;
+  entries.push({id:Date.now(),name,cal,category:selCat,ts:Date.now()});
+  save();render();
+  setTimeout(()=>{
+    const el=document.getElementById("inp-name");
+    if(el){el.value="";el.focus()}
+    const cl=document.getElementById("inp-cal");
+    if(cl)cl.value="";
+    updBtn();
+  },10);
+}
+
+function delEntry(id){entries=entries.filter(e=>e.id!==id);save();render()}
+function openGoal(){modalOpen=true;render()}
+function closeGoal(){modalOpen=false;render()}
+function saveGoal(){
+  const g=parseInt(document.getElementById("goal-inp")?.value,10);
+  if(!isNaN(g)&&g>0)goal=g;
+  modalOpen=false;save();render();
+}
+
+load();render();
+</script>
+</body>
+</html>
